@@ -1,13 +1,11 @@
 package it.jacopocarlini.fff.controller;
 
+import dev.openfeature.sdk.MutableContext;
 import it.jacopocarlini.fff.models.FlagDetails;
-import it.jacopocarlini.fff.models.FlagItem;
-import it.jacopocarlini.fff.providers.FlagService;
-import it.jacopocarlini.fff.providers.MongoDBFeatureFlagProvider;
+import it.jacopocarlini.fff.service.FlagService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -15,29 +13,41 @@ import java.util.List;
 public class FlagController {
 
     @Autowired
-    private MongoDBFeatureFlagProvider provider;
-
-    @Autowired
-    FlagService flagService;
-
-
+    private FlagService flagService;
 
     @GetMapping("/flags")
-    List<FlagItem> getFlags() {
+    List<FlagDetails> getFlags() {
         return flagService.getFlags();
     }
 
-    @GetMapping("/flag/{key}")
+    @GetMapping("/flags/{key}")
     FlagDetails getFlag(@PathVariable String key) {
         return flagService.getFlag(key);
     }
 
-
-    @GetMapping("/flag/{key}/eval")
-    String evaluateFlag(@PathVariable String key) {
-        return provider.getStringEvaluation(key, "vuoto", null).getValue();
+    @PostMapping("/flags")
+    @ResponseStatus(code = HttpStatus.CREATED)
+    void createFlag(@RequestBody FlagDetails flagDetails) {
+        flagService.crateFlag(flagDetails);
     }
 
+    @PutMapping("/flags/{key}")
+    void updateFlag(@PathVariable String key, @RequestBody FlagDetails flagDetails) {
+        flagService.updateFlag(key, flagDetails);
+    }
+
+    @DeleteMapping("/flags/{key}")
+    void deleteFlag(@PathVariable String key) {
+        flagService.deleteFlag(key);
+    }
+
+    @GetMapping("/flags/{key}/eval")
+    String evaluateFlag(@PathVariable String key,
+                        @RequestParam(required = true) String defaultValue,
+                        @RequestParam(required = false) String targetKey) {
+
+        return flagService.getStringEvaluation(key, defaultValue, new MutableContext().setTargetingKey(targetKey));
+    }
 
 
 }

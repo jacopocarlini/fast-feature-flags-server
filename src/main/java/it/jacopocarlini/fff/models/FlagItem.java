@@ -22,5 +22,4 @@ public class FlagItem {
     private Boolean rollout;
 
 
-
 }
